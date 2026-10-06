@@ -196,7 +196,7 @@ button.ghost { background: transparent; color: var(--accent); box-shadow: inset 
 .player { margin: 0 0 22px; border-radius: 16px; overflow: hidden; border: 3px solid var(--ink); background: #16131f; }
 .stage { position: relative; }
 .stage svg { display: block; width: 100%; height: auto; }
-.cap { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); max-width: calc(100% - 20px); width: max-content;
+.vcap { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); max-width: calc(100% - 20px); width: max-content;
   background: rgba(15, 12, 24, .72); color: #fff; font-family: var(--f-display); font-weight: 700; font-size: 1rem; line-height: 1.2;
   padding: 4px 12px; border-radius: 10px; text-align: center; }
 .big { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
@@ -629,7 +629,7 @@ function mountPlayer(host, th) {
     <div class="player">
       <div class="stage">
         <svg viewBox="0 0 320 180" role="img" aria-label="Animowany filmik: ${THEMES[th].name}">${S.markup()}</svg>
-        <div class="cap" aria-live="polite"></div>
+        <div class="vcap" aria-live="polite"></div>
         <button type="button" class="big"><span class="play" aria-hidden="true"></span><b>Obejrzyj filmik-nagrodę!</b></button>
       </div>
       <div class="bar">
@@ -645,8 +645,8 @@ function mountPlayer(host, th) {
   const draw = () => {
     S.update(t, k);
     let cap = ''; for (const [at, txt] of S.captions) if (t >= at) cap = txt;
-    q('.cap').textContent = playing || t > 0 ? cap : '';
-    q('.cap').hidden = !(playing || t > 0);
+    q('.vcap').textContent = playing || t > 0 ? cap : '';
+    q('.vcap').hidden = !(playing || t > 0);
     q('.fill').style.width = (t / D * 100) + '%';
     q('.track').setAttribute('aria-valuenow', t.toFixed(1));
     q('.time').textContent = `0:${String(Math.floor(t)).padStart(2, '0')} / 0:${D}`;
