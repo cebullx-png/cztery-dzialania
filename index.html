@@ -1,0 +1,815 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dziesięć Działań</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;800&display=swap">
+<style>
+/* Layout: one centered card on squared notebook paper (zeszyt w kratkę): level pick → 10 tasks → report */
+:root {
+  --paper: #f7f9fc;
+  --grid: #d6e2f0;
+  --card: #ffffff;
+  --ink: #1d2a44;
+  --muted: #5d6b85;
+  --accent: #2f6fdb;
+  --accent-ink: #ffffff;
+  --good: #1f9d5a;
+  --good-bg: #e3f6ec;
+  --bad: #d64545;
+  --bad-bg: #fde8e8;
+  --line: #e2e8f2;
+  --margin-red: #f2a3a3;
+  --lv-easy: #2e9e62;
+  --lv-mid: #2f6fdb;
+  --lv-hard: #7a4fd1;
+  --f-display: "Baloo 2", "Trebuchet MS", system-ui, sans-serif;
+  --f-body: "Nunito", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #131a28; --grid: #1f2a3e; --card: #1a2335; --ink: #e8eef9; --muted: #9aa8c2;
+    --accent: #6a9cf5; --accent-ink: #0d1424; --good: #4fd18e; --good-bg: #173327;
+    --bad: #f07a7a; --bad-bg: #3a1d22; --line: #2a3650; --margin-red: #6b3340;
+    --lv-easy: #4fd18e; --lv-mid: #6a9cf5; --lv-hard: #a98af0; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #131a28; --grid: #1f2a3e; --card: #1a2335; --ink: #e8eef9; --muted: #9aa8c2;
+  --accent: #6a9cf5; --accent-ink: #0d1424; --good: #4fd18e; --good-bg: #173327;
+  --bad: #f07a7a; --bad-bg: #3a1d22; --line: #2a3650; --margin-red: #6b3340;
+  --lv-easy: #4fd18e; --lv-mid: #6a9cf5; --lv-hard: #a98af0; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { min-height: 100%; }
+body {
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 17px;
+  padding-inline: 16px;
+  padding-block: 32px 48px;
+}
+.wrap { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+h1 { font-family: var(--f-display); font-weight: 800; font-size: 2rem; margin: 0; line-height: 1.1; text-wrap: balance; }
+h1 span { color: var(--accent); }
+h2 { font-family: var(--f-display); font-weight: 800; font-size: 1.5rem; margin: 0 0 14px; }
+.chip { font-weight: 800; font-size: .85rem; padding: 4px 12px; border-radius: 999px; color: var(--card); background: var(--lv); }
+
+.card {
+  background: var(--card);
+  border: 2px solid var(--line);
+  border-radius: 20px;
+  padding: 24px 24px 24px 36px;
+  position: relative;
+  box-shadow: 0 6px 0 var(--line);
+}
+.card::before { content: ""; position: absolute; left: 18px; top: 0; bottom: 0; width: 2px; background: var(--margin-red); }
+
+/* Level picker */
+.levels { display: grid; gap: 12px; }
+.level {
+  display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; align-items: center; text-align: left;
+  background: var(--paper); color: var(--ink); border: 3px solid var(--lv); border-radius: 16px;
+  padding: 12px 16px; box-shadow: 0 4px 0 var(--lv); font-family: var(--f-body);
+}
+.level:active { box-shadow: 0 1px 0 var(--lv); }
+.level .bars { grid-row: span 2; display: flex; gap: 3px; align-items: flex-end; height: 28px; }
+.level .bars i { width: 7px; border-radius: 2px; background: var(--line); }
+.level .bars i:nth-child(1) { height: 40%; } .level .bars i:nth-child(2) { height: 70%; } .level .bars i:nth-child(3) { height: 100%; }
+.level .bars i.on { background: var(--lv); }
+.level b { font-family: var(--f-display); font-size: 1.4rem; line-height: 1; color: var(--lv); }
+.level small { font-size: .9rem; color: var(--muted); font-weight: 600; }
+
+.shelf { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.shelf .spot { text-align: center; min-width: 0; }
+.shelf svg { width: 100%; height: auto; }
+.shelf .spot.locked svg { filter: grayscale(1); opacity: .22; }
+.shelf .cap { font-size: .8rem; font-weight: 800; color: var(--muted); }
+.shelf .spot:not(.locked) .cap { color: var(--ink); }
+
+.progress { display: flex; gap: 6px; margin-bottom: 18px; }
+.dot { flex: 1; height: 10px; border-radius: 5px; background: var(--line); transition: background .25s; }
+.dot.now { background: var(--accent); }
+.dot.ok { background: var(--good); }
+.dot.no { background: var(--bad); }
+.count, .pen-title { font-size: .8rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 800; }
+
+.task {
+  font-family: var(--f-display); font-weight: 700;
+  font-size: clamp(2.2rem, 10vw, 3.6rem);
+  line-height: 1.1; margin: 10px 0 18px;
+  font-variant-numeric: tabular-nums;
+  display: flex; align-items: center; flex-wrap: wrap; gap: .22em;
+}
+.task .op { color: var(--accent); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+.inbox { flex: 1 1 180px; min-width: 0; display: flex; gap: 8px; }
+#answer {
+  flex: 1; min-width: 0;
+  font-family: var(--f-display); font-weight: 700; font-size: 2rem;
+  padding: 8px 16px; border-radius: 14px;
+  border: 3px solid var(--line); background: var(--paper); color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+#answer:focus { outline: none; border-color: var(--accent); }
+#answer.ok { border-color: var(--good); }
+#answer.no { border-color: var(--bad); }
+button {
+  font-family: var(--f-display); font-weight: 700; font-size: 1.25rem;
+  border: 0; border-radius: 14px; padding: 12px 26px; cursor: pointer;
+  background: var(--accent); color: var(--accent-ink);
+  box-shadow: 0 4px 0 color-mix(in srgb, var(--accent) 60%, #000);
+  transition: transform .08s, box-shadow .08s;
+}
+button:active { transform: translateY(3px); }
+button:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+button.ghost { background: transparent; color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); }
+
+.feedback { margin-top: 16px; padding: 12px 16px; border-radius: 14px; font-weight: 800; font-size: 1.1rem; }
+.feedback.ok { background: var(--good-bg); color: var(--good); }
+.feedback.no { background: var(--bad-bg); color: var(--bad); }
+.hint { font-size: .85rem; color: var(--muted); margin-top: 12px; }
+.err { color: var(--bad); font-size: .9rem; margin-top: 8px; font-weight: 600; }
+
+.score { font-family: var(--f-display); font-weight: 800; font-size: clamp(3.5rem, 18vw, 5rem); line-height: 1; margin: 6px 0 4px; font-variant-numeric: tabular-nums; }
+.score small { font-size: .45em; color: var(--muted); }
+.msg { font-size: 1.2rem; font-weight: 800; margin: 0 0 18px; }
+.list { list-style: none; margin: 0 0 20px; padding: 0; display: grid; gap: 6px; }
+.list li { display: grid; grid-template-columns: 1.6em 1fr auto; gap: 10px; align-items: center; padding: 8px 12px; border-radius: 10px; font-variant-numeric: tabular-nums; }
+.list li.ok { background: var(--good-bg); }
+.list li.no { background: var(--bad-bg); }
+.list .mark { font-weight: 800; font-size: 1.1rem; }
+.list li.ok .mark { color: var(--good); }
+.list li.no .mark { color: var(--bad); }
+.list .eq { font-family: var(--f-display); font-weight: 700; font-size: 1.15rem; min-width: 0; }
+.list .yours { font-size: .85rem; color: var(--muted); text-align: right; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* Corgi rewards */
+.pen { margin-top: 20px; padding-top: 16px; border-top: 2px dashed var(--line); }
+.pen-title { margin-bottom: 8px; }
+.slots { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
+.slot { aspect-ratio: 1; max-width: 100%; border-radius: 50%; background: var(--line); display: grid; place-items: center; }
+.slot svg { width: 100%; height: 100%; display: block; }
+.slot.has { background: transparent; }
+.slot.pop svg { animation: pop .5s cubic-bezier(.3,1.6,.5,1); }
+@keyframes pop { from { transform: scale(0) rotate(-20deg); } to { transform: scale(1) rotate(0); } }
+.reward { display: flex; align-items: center; gap: 12px; }
+.reward svg { width: 54px; height: 54px; flex: none; animation: pop .5s cubic-bezier(.3,1.6,.5,1); }
+.kennel { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 18px; }
+.kennel svg { width: 48px; height: 48px; }
+.kennel .none { color: var(--muted); font-weight: 600; }
+
+.trophy { text-align: center; margin: 4px 0 22px; padding: 18px 12px 12px; border-radius: 16px;
+  background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--glow) 32%, transparent), transparent 70%); }
+.trophy svg { width: min(240px, 70%); height: auto; animation: rise .9s cubic-bezier(.3,1.5,.5,1); }
+.trophy h3 { font-family: var(--f-display); font-weight: 800; font-size: 1.7rem; margin: 6px 0 0; text-wrap: balance; }
+.trophy p { margin: 2px 0 0; color: var(--muted); font-weight: 600; }
+@keyframes rise { from { transform: translateY(30px) scale(.6); opacity: 0; } to { transform: none; opacity: 1; } }
+/* Theme picker */
+.step { font-size: .8rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 800; margin: 0 0 8px; }
+.themes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 22px; }
+.theme {
+  display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 6px 8px;
+  background: var(--paper); color: var(--ink); border: 3px solid var(--line); border-radius: 16px;
+  box-shadow: 0 4px 0 var(--line); font-family: var(--f-display); font-size: 1.1rem; min-width: 0;
+}
+.theme svg { width: 64px; height: 64px; }
+.theme[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 4px 0 var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--paper)); }
+.levels.off { opacity: .45; pointer-events: none; }
+.need { font-size: .9rem; color: var(--muted); font-weight: 600; margin: 8px 0 0; }
+
+.shelfrow { display: grid; grid-template-columns: 5.5em 1fr; gap: 8px; align-items: center; margin-bottom: 8px; }
+.shelfrow > b { font-family: var(--f-display); font-size: 1rem; }
+.shelfrow .shelf { min-width: 0; }
+
+/* Reward cartoon player */
+.player { margin: 0 0 22px; border-radius: 16px; overflow: hidden; border: 3px solid var(--ink); background: #16131f; }
+.stage { position: relative; }
+.stage svg { display: block; width: 100%; height: auto; }
+.cap { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); max-width: calc(100% - 20px); width: max-content;
+  background: rgba(15, 12, 24, .72); color: #fff; font-family: var(--f-display); font-weight: 700; font-size: 1rem; line-height: 1.2;
+  padding: 4px 12px; border-radius: 10px; text-align: center; }
+.big { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  background: rgba(22, 19, 31, .5); color: #fff; border-radius: 0; box-shadow: none; padding: 0; font-size: 1.2rem; }
+.big:active { transform: none; }
+.big .play { width: 70px; height: 70px; border-radius: 50%; background: var(--accent); display: grid; place-items: center;
+  box-shadow: 0 0 0 8px color-mix(in srgb, var(--accent) 35%, transparent); transition: transform .15s; }
+.big:hover .play { transform: scale(1.08); }
+.big .play::after { content: ""; margin-left: 6px; border-left: 22px solid #fff; border-top: 14px solid transparent; border-bottom: 14px solid transparent; }
+.bar { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--paper); }
+.bar button { font-size: .95rem; padding: 6px 12px; border-radius: 10px; box-shadow: none; }
+.bar .pp { width: 44px; padding: 6px 0; }
+.bar .snd { background: transparent; color: var(--muted); box-shadow: inset 0 0 0 2px var(--line); font-family: var(--f-body); font-weight: 800; font-size: .8rem; }
+.track { flex: 1; min-width: 40px; height: 10px; border-radius: 5px; background: var(--line); cursor: pointer; overflow: hidden; }
+.track:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.fill { height: 100%; width: 0; background: var(--accent); }
+.time { font-size: .8rem; font-weight: 800; color: var(--muted); font-variant-numeric: tabular-nums; }
+@media (max-width: 420px) { .time { display: none; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Cztery <span>działania</span></h1>
+    <span class="chip" id="chip" hidden></span>
+  </header>
+
+  <section class="card" id="start">
+    <p class="step">Krok 1</p>
+    <h2>Wybierz temat naklejek</h2>
+    <div class="themes" id="themes"></div>
+    <p class="step">Krok 2</p>
+    <h2>Wybierz poziom</h2>
+    <div class="levels" id="levels"></div>
+    <p class="need" id="need" hidden>Najpierw wybierz temat.</p>
+    <div class="pen">
+      <div class="pen-title">Twoje puchary</div>
+      <div id="shelves"></div>
+    </div>
+  </section>
+
+  <section class="card" id="quiz" hidden>
+    <div class="progress" id="progress"></div>
+    <div class="count" id="count">Zadanie 1 z 10</div>
+    <div class="task" id="task" aria-live="polite"></div>
+    <form id="form" autocomplete="off">
+      <div class="row">
+        <div class="inbox">
+          <input id="answer" type="text" inputmode="numeric" aria-label="Twoja odpowiedź" placeholder="?">
+        </div>
+        <button type="submit" id="btn">Sprawdź</button>
+      </div>
+      <div class="err" id="err" hidden></div>
+    </form>
+    <div class="feedback" id="feedback" hidden aria-live="polite"></div>
+    <div class="hint" id="hint"></div>
+    <div class="pen">
+      <div class="pen-title" id="penTitle">Twoje naklejki: 0</div>
+      <div class="slots" id="slots"></div>
+    </div>
+  </section>
+
+  <section class="card" id="report" hidden>
+    <div class="count">Twój wynik</div>
+    <div class="score" id="score"></div>
+    <p class="msg" id="msg"></p>
+    <div class="trophy" id="trophy" hidden></div>
+    <div id="video"></div>
+    <div class="pen-title" id="kennelTitle"></div>
+    <div class="kennel" id="kennel"></div>
+    <ul class="list" id="list"></ul>
+    <div class="actions">
+      <button type="button" id="again">Nowe zadania</button>
+      <button type="button" class="ghost" id="change">Zmień temat lub poziom</button>
+    </div>
+  </section>
+</div>
+
+<script>
+const N = 10;
+const $ = id => document.getElementById(id);
+
+// ---------- Sticker drawings (original, front-view faces, viewBox 0 0 100 100) ----------
+const ART = {
+  corgi: () => `<g stroke="#6b3a12" stroke-width="2" stroke-linejoin="round">
+      <polygon points="16,50 21,4 47,33" fill="#e8913a"/><polygon points="84,50 79,4 53,33" fill="#e8913a"/></g>
+    <polygon points="24,40 25,15 40,32" fill="#f6b5b5"/><polygon points="76,40 75,15 60,32" fill="#f6b5b5"/>
+    <ellipse cx="50" cy="60" rx="37" ry="31" fill="#e8913a" stroke="#6b3a12" stroke-width="2"/>
+    <path d="M50 32 C44 44 41 54 34 66 C29 78 38 90 50 90 C62 90 71 78 66 66 C59 54 56 44 50 32 Z" fill="#fffaf2"/>
+    <ellipse cx="27" cy="69" rx="6" ry="4" fill="#f59a9a" opacity=".55"/><ellipse cx="73" cy="69" rx="6" ry="4" fill="#f59a9a" opacity=".55"/>
+    <circle cx="36" cy="57" r="4.6" fill="#2a1a10"/><circle cx="37.6" cy="55.4" r="1.5" fill="#fff"/>
+    <circle cx="64" cy="57" r="4.6" fill="#2a1a10"/><circle cx="65.6" cy="55.4" r="1.5" fill="#fff"/>
+    <ellipse cx="50" cy="70" rx="6.5" ry="4.6" fill="#2a1a10"/>
+    <path d="M46 81 Q50 91 54 81 Z" fill="#ef6f86"/>
+    <path d="M50 74 Q50 80 44 81 M50 74 Q50 80 56 81" stroke="#2a1a10" stroke-width="2" fill="none" stroke-linecap="round"/>`,
+  axolotl: () => `<g stroke="#d9487f" stroke-width="7" stroke-linecap="round" fill="none">
+      <path d="M22 50 L5 34"/><path d="M19 60 L2 60"/><path d="M22 70 L6 84"/>
+      <path d="M78 50 L95 34"/><path d="M81 60 L98 60"/><path d="M78 70 L94 84"/></g>
+    <g fill="#f07aa6"><circle cx="9" cy="38" r="3"/><circle cx="6" cy="60" r="3"/><circle cx="10" cy="80" r="3"/>
+      <circle cx="91" cy="38" r="3"/><circle cx="94" cy="60" r="3"/><circle cx="90" cy="80" r="3"/></g>
+    <ellipse cx="50" cy="60" rx="36" ry="27" fill="#f9b8cf" stroke="#b8557e" stroke-width="2"/>
+    <ellipse cx="50" cy="44" rx="18" ry="6" fill="#fdd5e3" opacity=".8"/>
+    <ellipse cx="28" cy="68" rx="6" ry="4" fill="#f07aa6" opacity=".5"/><ellipse cx="72" cy="68" rx="6" ry="4" fill="#f07aa6" opacity=".5"/>
+    <circle cx="31" cy="56" r="4.4" fill="#2a1a22"/><circle cx="32.5" cy="54.6" r="1.4" fill="#fff"/>
+    <circle cx="69" cy="56" r="4.4" fill="#2a1a22"/><circle cx="70.5" cy="54.6" r="1.4" fill="#fff"/>
+    <path d="M36 67 Q50 79 64 67" stroke="#2a1a22" stroke-width="2.5" fill="none" stroke-linecap="round"/>`,
+  cat: () => `<g stroke="#474a5c" stroke-width="2" stroke-linejoin="round">
+      <polygon points="17,46 20,8 45,28" fill="#a9acbd"/><polygon points="83,46 80,8 55,28" fill="#a9acbd"/></g>
+    <polygon points="24,38 25,17 38,29" fill="#f6b5b5"/><polygon points="76,38 75,17 62,29" fill="#f6b5b5"/>
+    <ellipse cx="50" cy="60" rx="37" ry="30" fill="#a9acbd" stroke="#474a5c" stroke-width="2"/>
+    <g stroke="#6f7285" stroke-width="3.2" stroke-linecap="round"><path d="M43 33 L45 43"/><path d="M50 31 L50 43"/><path d="M57 33 L55 43"/>
+      <path d="M15 58 L24 60"/><path d="M85 58 L76 60"/></g>
+    <ellipse cx="43" cy="73" rx="8" ry="6" fill="#f4f4f8"/><ellipse cx="57" cy="73" rx="8" ry="6" fill="#f4f4f8"/>
+    <ellipse cx="36" cy="57" rx="5.5" ry="6.5" fill="#9bd46e" stroke="#474a5c" stroke-width="1.5"/><ellipse cx="36" cy="57" rx="1.8" ry="5" fill="#1d1d24"/>
+    <ellipse cx="64" cy="57" rx="5.5" ry="6.5" fill="#9bd46e" stroke="#474a5c" stroke-width="1.5"/><ellipse cx="64" cy="57" rx="1.8" ry="5" fill="#1d1d24"/>
+    <path d="M46 66 L54 66 L50 70 Z" fill="#ef8fa2"/>
+    <path d="M50 70 Q50 75 45 76 M50 70 Q50 75 55 76" stroke="#474a5c" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <g stroke="#474a5c" stroke-width="1.3" stroke-linecap="round"><path d="M35 72 L12 68"/><path d="M35 75 L13 78"/><path d="M65 72 L88 68"/><path d="M65 75 L87 78"/></g>`,
+};
+
+const THEMES = {
+  corgi:   { name: 'Corgi',    acc: 'corgi',     plural: 'corgi',     cup: 'SUPER CORGI', title: 'Super Corgi',    tl: 96 },
+  axolotl: { name: 'Aksolotl', acc: 'aksolotla', plural: 'aksolotle', cup: 'SUPER AKSOLOTL', title: 'Super Aksolotl', tl: 108 },
+  cat:     { name: 'Kot',      acc: 'kota',      plural: 'koty',      cup: 'SUPER KOT', title: 'Super Kot',      tl: 76 },
+};
+
+const LEVELS = {
+  easy: { name: 'Łatwy', bars: 1, color: 'var(--lv-easy)', desc: 'Małe liczby, np. 2 × 4 albo 12 + 5',
+    cup: { name: 'Brązowy', a: '#a8622a', b: '#f3bd8a', c: '#8a4b1a', s: '#6e3a12', glow: '#e08a3c', plate: '#1f5c3e', stars: 1 } },
+  mid: { name: 'Średni', bars: 2, color: 'var(--lv-mid)', desc: 'Średnie liczby, np. 7 × 8 albo 52 − 27',
+    cup: { name: 'Srebrny', a: '#9aa3ad', b: '#f6f8fb', c: '#7f8893', s: '#56606b', glow: '#9fb4cc', plate: '#233c6b', stars: 2 } },
+  hard: { name: 'Trudny', bars: 3, color: 'var(--lv-hard)', desc: 'Duże liczby, np. 17 × 9 albo 96 : 8',
+    cup: { name: 'Złoty', a: '#d99a1e', b: '#ffe07a', c: '#c98712', s: '#a8700c', glow: '#f6c445', plate: '#3b2a55', stars: 3, crown: true } },
+};
+
+let theme = null, level = 'easy', tasks = [], i = 0, checked = false;
+
+// ---------- Saved in this browser only ----------
+function store(k, v) { try { localStorage.setItem(k, v); } catch {} }
+function read(k) { try { return localStorage.getItem(k); } catch { return null; } }
+function loadWins() {
+  let w = {};
+  try { w = JSON.parse(read('cups-v2') || '{}'); } catch {}
+  if (!read('cups-v2')) { // carry over corgi cups won before themes existed
+    try { const old = JSON.parse(read('corgi-cups') || '{}'); for (const k in old) w['corgi-' + k] = old[k]; } catch {}
+  }
+  return w;
+}
+function saveWin(th, lv) { const w = loadWins(); const k = th + '-' + lv; w[k] = (w[k] || 0) + 1; store('cups-v2', JSON.stringify(w)); }
+
+const sticker = (th = theme) => `<svg viewBox="0 0 100 100" aria-hidden="true">${ART[th]()}</svg>`;
+
+let cupId = 0;
+function trophySvg(th, lv) {
+  const L = LEVELS[lv], T = THEMES[th], c = L.cup, id = 'g' + (++cupId);
+  const star = (x, y, r) => `<path d="M${x} ${y - r} L${x + r * .3} ${y - r * .3} L${x + r} ${y} L${x + r * .3} ${y + r * .3} L${x} ${y + r} L${x - r * .3} ${y + r * .3} L${x - r} ${y} L${x - r * .3} ${y - r * .3}Z"/>`;
+  const stars = [star(16, 20, 9), star(186, 120, 7), star(184, 18, 6)].slice(0, c.stars).join('');
+  const bow = lv === 'easy' ? `<g fill="#e5484d" stroke="#9e2a2e" stroke-width="2"><path d="M100 128 L80 118 L80 138Z"/><path d="M100 128 L120 118 L120 138Z"/><circle cx="100" cy="128" r="5"/></g>` : '';
+  const laurel = lv === 'mid' ? `<g fill="#3fa36b" stroke="#24704a" stroke-width="1.5">
+      ${[0, 1, 2, 3].map(k => `<ellipse cx="${44 + k * 3}" cy="${108 - k * 14}" rx="4" ry="8" transform="rotate(${-30 + k * 8} ${44 + k * 3} ${108 - k * 14})"/>
+      <ellipse cx="${156 - k * 3}" cy="${108 - k * 14}" rx="4" ry="8" transform="rotate(${30 - k * 8} ${156 - k * 3} ${108 - k * 14})"/>`).join('')}</g>` : '';
+  const crown = c.crown ? `<g fill="#ffd34d" stroke="#a8700c" stroke-width="2.5" stroke-linejoin="round">
+      <path d="M72 14 L76 -16 L88 -2 L100 -22 L112 -2 L124 -16 L128 14 Z"/>
+      <circle cx="100" cy="-24" r="4"/><circle cx="76" cy="-18" r="3.5"/><circle cx="124" cy="-18" r="3.5"/></g>
+      <circle cx="100" cy="4" r="4" fill="#e5484d"/>` : '';
+  return `<svg viewBox="0 -30 200 262" role="img" aria-label="${c.name} puchar ${T.title}, poziom ${L.name.toLowerCase()}">
+    <defs><linearGradient id="${id}" x1="0" x2="1">
+      <stop offset="0" stop-color="${c.a}"/><stop offset=".45" stop-color="${c.b}"/><stop offset="1" stop-color="${c.c}"/>
+    </linearGradient></defs>
+    ${crown}
+    <path d="M44 36 C8 36 10 92 50 100" stroke="url(#${id})" stroke-width="11" fill="none" stroke-linecap="round"/>
+    <path d="M156 36 C192 36 190 92 150 100" stroke="url(#${id})" stroke-width="11" fill="none" stroke-linecap="round"/>
+    <path d="M38 22 H162 V72 C162 118 132 140 100 140 C68 140 38 118 38 72 Z" fill="url(#${id})" stroke="${c.s}" stroke-width="3"/>
+    <rect x="34" y="14" width="132" height="12" rx="6" fill="url(#${id})" stroke="${c.s}" stroke-width="3"/>
+    ${laurel}
+    <g transform="translate(60 34) scale(.8)">${ART[th]()}</g>
+    <rect x="88" y="138" width="24" height="26" fill="url(#${id})" stroke="${c.s}" stroke-width="3"/>
+    ${bow}
+    <rect x="62" y="162" width="76" height="14" rx="4" fill="url(#${id})" stroke="${c.s}" stroke-width="3"/>
+    <rect x="34" y="176" width="132" height="50" rx="8" fill="${c.plate}" stroke="rgba(0,0,0,.35)" stroke-width="3"/>
+    <text x="100" y="199" text-anchor="middle" font-family="Baloo 2, sans-serif" font-weight="800" font-size="16" fill="${c.b}" textLength="${T.tl}" lengthAdjust="spacingAndGlyphs">${T.cup}</text>
+    <text x="100" y="217" text-anchor="middle" font-family="Nunito, sans-serif" font-weight="800" font-size="11" fill="#ffffff" opacity=".85" letter-spacing="2">${L.name.toUpperCase()}</text>
+    <g fill="#ffd34d">${stars}</g>
+  </svg>`;
+}
+
+// ---------- Tasks: every number shown is at most 99; difficulty = size of the numbers ----------
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+function addPair(lv) {
+  if (lv === 'easy') return [rnd(2, 29), rnd(2, 9)];     // e.g. 12 + 5, 24 + 7
+  if (lv === 'mid') return [rnd(10, 59), rnd(5, 42)];    // e.g. 34 + 18
+  return [rnd(20, 99), rnd(20, 99)];                     // e.g. 67 + 58
+}
+function subPair(lv) {
+  if (lv === 'easy') { const a = rnd(5, 35); return [a, rnd(1, Math.min(9, a - 1))]; }   // e.g. 17 − 4
+  if (lv === 'mid') { const a = rnd(20, 89); return [a, rnd(5, a - 5)]; }                  // e.g. 52 − 27
+  const a = rnd(40, 99); return [a, rnd(11, a - 5)];                                       // e.g. 93 − 48
+}
+function mulPair(lv) {
+  if (lv === 'easy') return [rnd(2, 5), rnd(2, 9)];      // e.g. 2 × 4
+  if (lv === 'mid') return [rnd(2, 12), rnd(2, 13)];     // e.g. 7 × 8
+  return [rnd(11, 28), rnd(3, 9)];                       // e.g. 17 × 9
+}
+function divPair(lv) { // [quotient, divisor], dividend ≤ 99
+  if (lv === 'hard') { const a = rnd(11, 33); return [a, rnd(2, Math.floor(99 / a))]; }   // e.g. 96 : 8
+  let p; do { p = mulPair(lv); } while (p[0] * p[1] > 99); return p;
+}
+function makeTask(lv) {
+  const op = rnd(0, 3);
+  if (op === 2) { const [a, b] = addPair(lv); return { text: [a, '+', b], answer: a + b, label: `${a} + ${b}` }; }
+  if (op === 3) { const [a, b] = subPair(lv); return { text: [a, '−', b], answer: a - b, label: `${a} − ${b}` }; }
+  let [a, b] = op === 0 ? mulPair(lv) : divPair(lv);
+  if (op === 0) { if (Math.random() < .5) [a, b] = [b, a]; return { text: [a, '×', b], answer: a * b, label: `${a} × ${b}` }; }
+  const d = a * b;
+  return { text: [d, ':', b], answer: a, label: `${d} : ${b}` };
+}
+
+// ---------- Reward cartoons: original animated scenes played inside the page ----------
+const D = 12; // seconds
+const cl = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const seg = (t, a, b) => cl((t - a) / (b - a));
+const ease = p => p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+const lerp = (a, b, p) => a + (b - a) * p;
+const PI = Math.PI;
+const TF = (el, x, y, r = 0, sx = 1, sy = sx) => el && el.setAttribute('transform', `translate(${x.toFixed(2)} ${y.toFixed(2)}) rotate(${r.toFixed(2)}) scale(${sx.toFixed(3)} ${sy.toFixed(3)})`);
+const OP = (el, v) => el && el.setAttribute('opacity', cl(v).toFixed(2));
+const face = (th, s, extra = '') => `<g transform="scale(${s}) translate(-50 -55)">${ART[th]()}${extra}</g>`;
+const starPath = r => `M0 ${-r} L${r * .3} ${-r * .3} L${r} 0 L${r * .3} ${r * .3} L0 ${r} L${-r * .3} ${r * .3} L${-r} 0 L${-r * .3} ${-r * .3}Z`;
+const heart = `<path d="M0 4 C-10 -4 -6 -12 0 -7 C6 -12 10 -4 0 4Z" fill="#e5484d"/>`;
+const FONT = `font-family="Baloo 2, Trebuchet MS, sans-serif" font-weight="800"`;
+
+const SCENES = {
+  corgi: {
+    captions: [[0, 'Corgi wpada do pokoju!'], [3, 'Super moc: turbo-merdanie!'], [5, 'Piłka! Hop!... prawie.'], [8.6, 'BOING! Kręci się w głowie.'], [10.5, 'Czas na drzemkę. Zzz...']],
+    events: [[5.5, 'hop'], [8.6, 'boing']],
+    markup: () => `
+      <rect width="320" height="180" fill="#fde7c8"/>
+      <rect x="40" y="24" width="70" height="54" rx="4" fill="#bfe3ff" stroke="#b07a45" stroke-width="4"/>
+      <path d="M75 24 V78 M40 51 H110" stroke="#b07a45" stroke-width="3"/>
+      <rect x="230" y="40" width="44" height="34" rx="3" fill="#fff6e6" stroke="#b07a45" stroke-width="3"/>
+      <circle cx="252" cy="57" r="9" fill="#f6c445"/>
+      <rect y="140" width="320" height="40" fill="#d9a86c"/>
+      <ellipse cx="160" cy="160" rx="120" ry="12" fill="#e5484d" opacity=".3"/>
+      <g data-k="dog">
+        <g data-k="butt"><circle cx="-30" cy="-2" r="9" fill="#fffaf2" stroke="#6b3a12" stroke-width="1.5"/><circle cx="-37" cy="-8" r="4.5" fill="#e8913a" stroke="#6b3a12" stroke-width="1.5"/></g>
+        ${[0, 1, 2, 3].map(i => `<g data-k="l${i}"><rect x="-3.5" y="0" width="7" height="13" rx="3" fill="#e8913a" stroke="#6b3a12" stroke-width="1.5"/><rect x="-3" y="9" width="6" height="4" rx="2" fill="#fffaf2"/></g>`).join('')}
+        <ellipse rx="32" ry="14" fill="#e8913a" stroke="#6b3a12" stroke-width="2"/>
+        <ellipse cx="2" cy="6" rx="20" ry="6" fill="#fffaf2"/>
+        <g data-k="head">${face('corgi', .46)}
+          <g data-k="stars" opacity="0" fill="#ffd34d" stroke="#a8700c" stroke-width="1">
+            <path d="${starPath(6)}" transform="translate(20 0)"/><path d="${starPath(5)}" transform="translate(-10 17)"/><path d="${starPath(5)}" transform="translate(-10 -17)"/>
+          </g>
+        </g>
+      </g>
+      <g data-k="ball"><circle r="10" fill="#e5484d" stroke="#8f2427" stroke-width="2"/><path d="M-10 0 Q0 -6 10 0" stroke="#fff" stroke-width="2.5" fill="none"/></g>
+      <text data-k="boing" ${FONT} font-size="22" fill="#2f6fdb" stroke="#fff" stroke-width="1" text-anchor="middle" opacity="0">BOING!</text>
+      <g data-k="zzz" opacity="0" ${FONT} fill="#5d6b85"><text font-size="12">Z</text><text x="9" y="-12" font-size="15">Z</text><text x="20" y="-28" font-size="19">Z</text></g>`,
+    update(t, k) {
+      let x = t < 3 ? lerp(-50, 140, ease(seg(t, 0, 3))) : 140, y = 128, r = 0;
+      const running = t < 3;
+      const swing = running ? Math.sin(t * 28) * 35 : t > 10.8 ? Math.sin(t * 6) * 20 : 0;
+      [-22, -12, 14, 24].forEach((lx, i) => TF(k['l' + i], lx, 8, swing * (i % 2 ? 1 : -1)));
+      const wig = t > 3 && t < 5.2 ? Math.sin(t * 30) : 0;
+      TF(k.butt, 0, wig * 2, wig * 10);
+      y -= Math.sin(PI * seg(t, 5.5, 6.3)) * 10;
+      r = ease(seg(t, 8.6, 10)) * 720 + wig * 3;
+      const fl = ease(seg(t, 10.5, 11.2));
+      if (t > 10.5) { r = 720 + 180 * fl; y = lerp(128, 134, fl); }
+      TF(k.dog, x, y, r);
+      TF(k.head, 30, -18 - (running ? Math.abs(Math.sin(t * 14)) * 3 : 0));
+      OP(k.stars, t > 8.6 && t < 10.8 ? 1 : 0); TF(k.stars, 0, -30, t * 300, .8);
+      let bx = 215, by = -40;
+      if (t >= 5 && t < 5.9) by = lerp(-20, 140, Math.pow(seg(t, 5, 5.9), 2));
+      else if (t >= 5.9 && t < 7) by = 140 - Math.sin(PI * seg(t, 5.9, 7)) * 50;
+      else if (t >= 7 && t < 8) by = 140 - Math.sin(PI * seg(t, 7, 8)) * 28;
+      else if (t >= 8 && t < 8.6) { const p = seg(t, 8, 8.6); bx = lerp(215, 172, p); by = lerp(140, 88, p) - Math.sin(PI * p) * 40; }
+      else if (t >= 8.6 && t < 9.8) { const p = seg(t, 8.6, 9.8); bx = lerp(172, 340, p); by = lerp(88, -30, p) - Math.sin(PI * p) * 30; }
+      TF(k.ball, bx, by, t * 400);
+      const bp = seg(t, 8.6, 9.6);
+      OP(k.boing, t > 8.6 && t < 9.6 ? 1 - bp * bp : 0); TF(k.boing, 205, 62, -8, .6 + Math.min(1, bp * 4) * .5);
+      OP(k.zzz, t > 11 ? 1 : 0); TF(k.zzz, 120, 118 - (t - 11) * 18);
+    },
+  },
+
+  axolotl: {
+    captions: [[0, 'Aksolotl wyrusza po obiad.'], [3, 'Robaczek! Za nim!'], [5, 'BĘC! Szyba akwarium...'], [6, 'Nikt nie widział. Zrobię fikołka!'], [9, 'Ziiieeew! Super Aksolotl odpoczywa.']],
+    events: [[5, 'bonk'], [10.6, 'pop']],
+    markup: () => `
+      <defs><linearGradient id="sc-water" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fdcec"/><stop offset="1" stop-color="#2b8fb3"/></linearGradient></defs>
+      <rect width="320" height="180" fill="url(#sc-water)"/>
+      <polygon points="60,0 90,0 50,180 10,180" fill="#fff" opacity=".1"/><polygon points="180,0 200,0 170,180 140,180" fill="#fff" opacity=".08"/>
+      <ellipse cx="160" cy="186" rx="210" ry="28" fill="#f3d89a"/>
+      <ellipse cx="240" cy="166" rx="10" ry="6" fill="#c9b07a"/><ellipse cx="96" cy="170" rx="7" ry="4" fill="#d9c08a"/>
+      ${[0, 1, 2].map(i => `<g data-k="w${i}"><path d="M0 0 C-8 -20 8 -40 0 -60 C-8 -80 6 -95 0 -105" stroke="#3fa36b" stroke-width="6" fill="none" stroke-linecap="round"/></g>`).join('')}
+      ${[0, 1, 2, 3, 4, 5].map(i => `<circle data-k="b${i}" r="${3 + (i % 3)}" fill="none" stroke="#fff" stroke-width="1.5" opacity=".7"/>`).join('')}
+      <g data-k="worm"><path data-k="wp" stroke="#d9776a" stroke-width="5" fill="none" stroke-linecap="round"/></g>
+      <g data-k="axo">
+        <g data-k="tail"><path d="M0 0 Q-24 -12 -34 0 Q-24 12 0 0Z" fill="#f7a3c2" stroke="#b8557e" stroke-width="1.5"/></g>
+        <ellipse cx="-12" cy="11" rx="4" ry="6" fill="#f9b8cf" stroke="#b8557e" stroke-width="1.5"/><ellipse cx="12" cy="11" rx="4" ry="6" fill="#f9b8cf" stroke="#b8557e" stroke-width="1.5"/>
+        <ellipse rx="30" ry="12" fill="#f9b8cf" stroke="#b8557e" stroke-width="2"/>
+        <g data-k="head">${face('axolotl', .5, `<ellipse data-k="blush" cx="28" cy="68" rx="10" ry="6" fill="#f0567f" opacity="0"/><ellipse data-k="blush2" cx="72" cy="68" rx="10" ry="6" fill="#f0567f" opacity="0"/><ellipse data-k="mouth" cx="50" cy="73" rx="10" ry="0" fill="#5a2340"/>`)}</g>
+      </g>
+      <rect x="310" y="0" width="5" height="180" fill="#fff" opacity=".45"/>
+      <g data-k="bonk" opacity="0"><path d="${starPath(18)}" fill="#ffd34d" stroke="#a8700c" stroke-width="1.5"/><text x="0" y="-22" ${FONT} font-size="18" fill="#fff" stroke="#1d2a44" stroke-width="1" text-anchor="middle">BĘC!</text></g>
+      ${[0, 1, 2].map(i => `<circle data-k="y${i}" r="5" fill="#fff" fill-opacity=".25" stroke="#fff" stroke-width="1.5" opacity="0"/>`).join('')}`,
+    update(t, k) {
+      [30, 62, 280].forEach((x, i) => TF(k['w' + i], x, 172, Math.sin(t * 1.5 + i * 2) * 7));
+      for (let i = 0; i < 6; i++) TF(k['b' + i], 25 + i * 52 + Math.sin(t * 2 + i) * 4, 185 - ((t * 22 + i * 37) % 200));
+      let x = 160, y = 95, r = 0, sx = 1, hs = 1;
+      if (t < 3) { x = lerp(-60, 120, ease(seg(t, 0, 3))); y = 95 + Math.sin(t * 4) * 6; }
+      else if (t < 5) { x = lerp(120, 268, ease(seg(t, 3, 5))); y = 95 + Math.sin(t * 4) * 4; }
+      else if (t < 6) { x = 268; sx = 1 - .28 * Math.sin(PI * seg(t, 5, 5.6)); }
+      else if (t < 7) x = lerp(268, 160, ease(seg(t, 6, 7)));
+      else if (t < 8.6) { const p = ease(seg(t, 7, 8.6)); r = -360 * p; y = 95 - Math.sin(PI * p) * 30; x = 160 + Math.sin(2 * PI * p) * 20; }
+      else y = 95 + Math.sin(t * 2) * 3;
+      hs = 1 + .5 * Math.sin(PI * seg(t, 9, 11));
+      TF(k.axo, x, y, r, sx, 1);
+      TF(k.tail, -26, 0, Math.sin(t * (t < 5 ? 12 : 5)) * 20);
+      TF(k.head, 30, -4, 0, hs);
+      const bl = t > 5.6 && t < 9 ? Math.min(1, (t - 5.6) * 3) * .85 : 0;
+      OP(k.blush, bl); OP(k.blush2, bl);
+      k.mouth.setAttribute('ry', (9 * Math.sin(PI * seg(t, 9.3, 10.8))).toFixed(2));
+      const wv = t > 3 && t < 4.8;
+      OP(k.worm, wv ? 1 : 0);
+      if (wv) {
+        const p = seg(t, 4.2, 4.8), s = Math.sin(t * 14) * 5;
+        TF(k.worm, 248 + p * 30, lerp(92, -30, p * p));
+        k.wp.setAttribute('d', `M0 0 Q4 ${-s} 8 0 T16 0 T24 0`);
+      }
+      const bk = seg(t, 5, 6.2);
+      OP(k.bonk, t > 5 && t < 6.2 ? 1 - bk * bk : 0); TF(k.bonk, 292, 72, t * 90, .6 + Math.min(1, bk * 5) * .4);
+      const mx = x + 30, my = y - 4 + 9 * hs;
+      for (let i = 0; i < 3; i++) {
+        const q = t - 10.6 - i * .25;
+        OP(k['y' + i], q > 0 && q < 1.4 ? 1 : 0);
+        TF(k['y' + i], mx - 8 + i * 8 + Math.sin(q * 6) * 3, my - q * 45, 0, 1 + q * .8);
+      }
+    },
+  },
+
+  cat: {
+    captions: [[0, 'To jest kot. A to szklanka.'], [3, 'Kot patrzy na ciebie... i pcha.'], [6.8, 'BRZDĘK!'], [7.6, 'A teraz: za mały karton!'], [9.8, 'Idealnie pasuje!']],
+    events: [[6.8, 'crash'], [9.2, 'pop']],
+    markup: () => `
+      <rect width="320" height="180" fill="#f3e6d6"/>
+      <rect x="110" y="22" width="54" height="40" rx="3" fill="#bfe3ff" stroke="#8a5a3a" stroke-width="4"/>
+      <path d="M124 46 q8 -10 16 0 q-8 10 -16 0 l-6 -5 v10z" fill="#f08a3c"/>
+      <rect y="150" width="320" height="30" fill="#c99a6b"/>
+      <rect x="160" y="100" width="130" height="8" rx="2" fill="#8a5a3a"/>
+      <rect x="170" y="108" width="8" height="42" fill="#7a4b2e"/><rect x="272" y="108" width="8" height="42" fill="#7a4b2e"/>
+      <polygon points="40,118 110,118 104,110 46,110" fill="#a8703c"/>
+      <g data-k="glass"><path d="M-8 -22 L8 -22 L6 0 L-6 0 Z" fill="#dff4fc" stroke="#6aaecc" stroke-width="1.5"/><path d="M-7 -12 L7 -12 L6 0 L-6 0Z" fill="#7cc8ea"/></g>
+      <g data-k="cat">
+        <g data-k="tail"><path d="M0 0 C18 -4 22 -20 14 -30" stroke="#a9acbd" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M0 0 C18 -4 22 -20 14 -30" stroke="#474a5c" stroke-width="1.5" fill="none" stroke-dasharray="3 6"/></g>
+        <ellipse rx="20" ry="24" fill="#a9acbd" stroke="#474a5c" stroke-width="2"/>
+        <ellipse cx="0" cy="6" rx="10" ry="14" fill="#f4f4f8"/>
+        <g data-k="paw"><rect data-k="pawr" x="0" y="-4" width="6" height="8" rx="4" fill="#a9acbd" stroke="#474a5c" stroke-width="1.5"/></g>
+        <ellipse cx="-9" cy="22" rx="7" ry="4" fill="#f4f4f8" stroke="#474a5c" stroke-width="1.5"/><ellipse cx="9" cy="22" rx="7" ry="4" fill="#f4f4f8" stroke="#474a5c" stroke-width="1.5"/>
+        <g data-k="head">${face('cat', .52)}</g>
+      </g>
+      <rect x="40" y="118" width="70" height="42" fill="#c58b4e" stroke="#8a5a2a" stroke-width="2"/>
+      <polygon points="40,118 26,103 50,109" fill="#d79a5c" stroke="#8a5a2a" stroke-width="2"/><polygon points="110,118 124,103 100,109" fill="#d79a5c" stroke="#8a5a2a" stroke-width="2"/>
+      <path d="M64 130 h22" stroke="#8a5a2a" stroke-width="2"/>
+      <g data-k="crash" opacity="0">
+        <ellipse cx="0" cy="2" rx="20" ry="4" fill="#7cc8ea"/>
+        <polygon points="-14,0 -8,-8 -6,0" fill="#dff4fc" stroke="#6aaecc"/><polygon points="4,0 9,-10 12,0" fill="#dff4fc" stroke="#6aaecc"/><polygon points="-3,0 0,-5 2,0" fill="#dff4fc" stroke="#6aaecc"/>
+      </g>
+      <text data-k="crashT" x="0" y="0" ${FONT} font-size="22" fill="#e5484d" stroke="#fff" stroke-width="1" text-anchor="end" opacity="0">BRZDĘK!</text>
+      ${[0, 1, 2].map(i => `<g data-k="h${i}" opacity="0">${heart}</g>`).join('')}`,
+    update(t, k) {
+      let x = 205, y = 76, r = 0, sx = 1, sy = 1;
+      TF(k.tail, 14, 16, Math.sin(t * 3) * 15);
+      let w = 4 + 71 * ease(seg(t, 3, 6));
+      if (t > 6.8) w = lerp(75, 4, seg(t, 6.8, 7.3));
+      k.pawr.setAttribute('width', w.toFixed(1));
+      TF(k.paw, 12, 8);
+      TF(k.head, 0, -30, t > 3 && t < 6.8 ? 10 * Math.min(1, (t - 3) * 2) : 0);
+      if (t > 7.6) {
+        const p = ease(seg(t, 7.6, 9.2));
+        x = lerp(205, 75, p); y = lerp(76, 124, p) - Math.sin(PI * p) * 50; r = -20 * Math.sin(PI * p);
+        const q = seg(t, 9.2, 9.8); sx = 1 + .25 * Math.sin(PI * q); sy = 1 - .25 * Math.sin(PI * q);
+        y += 6 * seg(t, 9.2, 10);
+      }
+      TF(k.cat, x, y, r, sx, sy);
+      if (t < 6) { TF(k.glass, Math.max(240, 227 + w), 100); OP(k.glass, 1); }
+      else if (t < 6.8) { const p = seg(t, 6, 6.8); TF(k.glass, 298 + 8 * p, 100 + 50 * p * p, 110 * p); OP(k.glass, 1); }
+      else OP(k.glass, 0);
+      const c = seg(t, 6.8, 8.6);
+      OP(k.crash, t > 6.8 ? 1 : 0); TF(k.crash, 300, 150);
+      OP(k.crashT, t > 6.8 && t < 8.6 ? 1 - c * c : 0); TF(k.crashT, 314, 132, -6, .7 + Math.min(1, c * 5) * .4);
+      for (let i = 0; i < 3; i++) {
+        const q = t - 10 - i * .4;
+        OP(k['h' + i], q > 0 ? Math.max(0, 1 - q / 2) : 0);
+        TF(k['h' + i], 62 + i * 14 + Math.sin(q * 4 + i) * 5, 86 - q * 26, 0, 1.2);
+      }
+    },
+  },
+};
+
+// Little cartoon sound effects, only after the viewer presses play
+let actx = null;
+function sfx(kind) {
+  if (!actx || !soundOn) return;
+  const t0 = actx.currentTime, g = actx.createGain(); g.connect(actx.destination);
+  const tone = (f0, f1, dur, type = 'sine', vol = .25) => {
+    const o = actx.createOscillator(); o.type = type; o.frequency.setValueAtTime(f0, t0);
+    o.frequency.exponentialRampToValueAtTime(f1, t0 + dur);
+    g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(.001, t0 + dur);
+    o.connect(g); o.start(t0); o.stop(t0 + dur);
+  };
+  if (kind === 'boing') tone(320, 90, .5, 'triangle', .3);
+  else if (kind === 'hop') tone(400, 800, .15);
+  else if (kind === 'bonk') tone(160, 50, .25, 'square', .15);
+  else if (kind === 'pop') tone(600, 1300, .09);
+  else if (kind === 'crash') {
+    const len = actx.sampleRate * .4, buf = actx.createBuffer(1, len, actx.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2);
+    const src = actx.createBufferSource(), hp = actx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 2500;
+    src.buffer = buf; src.connect(hp); hp.connect(g); g.gain.value = .35; src.start(t0);
+  }
+}
+let soundOn = true, player = null;
+
+function mountPlayer(host, th) {
+  if (player) player.stop();
+  const S = SCENES[th];
+  host.innerHTML = `
+    <div class="player">
+      <div class="stage">
+        <svg viewBox="0 0 320 180" role="img" aria-label="Animowany filmik: ${THEMES[th].name}">${S.markup()}</svg>
+        <div class="cap" aria-live="polite"></div>
+        <button type="button" class="big"><span class="play" aria-hidden="true"></span><b>Obejrzyj filmik-nagrodę!</b></button>
+      </div>
+      <div class="bar">
+        <button type="button" class="pp" aria-label="Odtwórz">▶</button>
+        <div class="track" role="slider" aria-label="Postęp filmiku" aria-valuemin="0" aria-valuemax="${D}" tabindex="0"><div class="fill"></div></div>
+        <span class="time">0:00 / 0:${D}</span>
+        <button type="button" class="snd" aria-pressed="${soundOn}">Dźwięk: ${soundOn ? 'wł.' : 'wył.'}</button>
+      </div>
+    </div>`;
+  const q = s => host.querySelector(s);
+  const k = {}; host.querySelectorAll('[data-k]').forEach(el => k[el.dataset.k] = el);
+  let t = 0, playing = false, last = 0, raf = 0, prev = 0;
+  const draw = () => {
+    S.update(t, k);
+    let cap = ''; for (const [at, txt] of S.captions) if (t >= at) cap = txt;
+    q('.cap').textContent = playing || t > 0 ? cap : '';
+    q('.cap').hidden = !(playing || t > 0);
+    q('.fill').style.width = (t / D * 100) + '%';
+    q('.track').setAttribute('aria-valuenow', t.toFixed(1));
+    q('.time').textContent = `0:${String(Math.floor(t)).padStart(2, '0')} / 0:${D}`;
+    q('.pp').textContent = playing ? '❚❚' : '▶';
+    q('.pp').setAttribute('aria-label', playing ? 'Pauza' : 'Odtwórz');
+  };
+  const loop = now => {
+    if (!playing) return;
+    t = Math.min(D, t + (now - last) / 1000); last = now;
+    for (const [at, kind] of S.events) if (prev < at && t >= at) sfx(kind);
+    prev = t;
+    if (t >= D) { playing = false; q('.big b').textContent = 'Obejrzyj jeszcze raz!'; q('.big').hidden = false; }
+    draw();
+    if (playing) raf = requestAnimationFrame(loop);
+  };
+  const play = () => {
+    try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); actx.resume(); } catch { actx = null; }
+    if (t >= D) { t = 0; prev = 0; }
+    playing = true; q('.big').hidden = true; last = performance.now();
+    raf = requestAnimationFrame(loop); draw();
+  };
+  const pause = () => { playing = false; cancelAnimationFrame(raf); draw(); };
+  const seek = r => { t = cl(r) * D; prev = t; if (t < D) q('.big').hidden = true; draw(); };
+  q('.big').addEventListener('click', play);
+  q('.pp').addEventListener('click', () => playing ? pause() : play());
+  q('.track').addEventListener('click', e => { const b = e.currentTarget.getBoundingClientRect(); seek((e.clientX - b.left) / b.width); });
+  q('.track').addEventListener('keydown', e => { if (e.key === 'ArrowRight') seek((t + 1) / D); if (e.key === 'ArrowLeft') seek((t - 1) / D); });
+  q('.snd').addEventListener('click', e => { soundOn = !soundOn; e.currentTarget.textContent = `Dźwięk: ${soundOn ? 'wł.' : 'wył.'}`; e.currentTarget.setAttribute('aria-pressed', soundOn); });
+  draw();
+  player = { stop: () => { playing = false; cancelAnimationFrame(raf); }, play, seek: s => { t = s; prev = s; draw(); } };
+  return player;
+}
+
+// ---------- Screens ----------
+function showStart() {
+  if (player) player.stop();
+  $('start').hidden = false; $('quiz').hidden = true; $('report').hidden = true; $('chip').hidden = true;
+  $('themes').innerHTML = Object.entries(THEMES).map(([k, T]) => `
+    <button type="button" class="theme" data-th="${k}" aria-pressed="${k === theme}">${sticker(k)}<span>${T.name}</span></button>`).join('');
+  $('levels').innerHTML = Object.entries(LEVELS).map(([k, L]) => `
+    <button type="button" class="level" data-lv="${k}" style="--lv:${L.color}">
+      <span class="bars">${[1, 2, 3].map(n => `<i class="${n <= L.bars ? 'on' : ''}"></i>`).join('')}</span>
+      <b>${L.name}</b><small>${L.desc}</small>
+    </button>`).join('');
+  $('levels').classList.toggle('off', !theme);
+  $('need').hidden = !!theme;
+  const wins = loadWins();
+  $('shelves').innerHTML = Object.entries(THEMES).map(([th, T]) => `
+    <div class="shelfrow"><b>${T.name}</b><div class="shelf">
+      ${Object.entries(LEVELS).map(([lv, L]) => { const n = wins[th + '-' + lv] || 0; return `
+        <div class="spot ${n ? '' : 'locked'}">${trophySvg(th, lv)}<div class="cap">${L.name}${n ? ` ×${n}` : ''}</div></div>`; }).join('')}
+    </div></div>`).join('');
+}
+
+function pickTheme(th) { theme = th; store('theme', th); showStart(); }
+
+function start(lv) {
+  if (!theme) return;
+  level = lv;
+  const seen = new Set();
+  tasks = [];
+  while (tasks.length < N) {
+    const t = makeTask(lv);
+    if (seen.has(t.label)) continue;
+    seen.add(t.label); tasks.push({ ...t, given: null, ok: null });
+  }
+  i = 0;
+  const chip = $('chip');
+  chip.textContent = `${THEMES[theme].name} · ${LEVELS[lv].name}`; chip.style.setProperty('--lv', LEVELS[lv].color); chip.hidden = false;
+  $('hint').textContent = `Wpisz wynik i naciśnij Enter. Za każdą dobrą odpowiedź dostajesz naklejkę: ${THEMES[theme].acc}!`;
+  $('start').hidden = true; $('report').hidden = true; $('quiz').hidden = false;
+  show();
+}
+
+function show() {
+  checked = false;
+  const t = tasks[i];
+  $('count').textContent = `Zadanie ${i + 1} z ${N}`;
+  $('task').innerHTML = `<span>${t.text[0]}</span><span class="op">${t.text[1]}</span><span>${t.text[2]}</span><span class="op">=</span>`;
+  $('answer').value = ''; $('answer').className = ''; $('answer').readOnly = false;
+  $('feedback').hidden = true; $('err').hidden = true;
+  $('btn').textContent = 'Sprawdź';
+  drawProgress(); drawPen(false);
+  $('answer').focus();
+}
+
+function drawProgress() {
+  $('progress').innerHTML = tasks.map((t, k) =>
+    `<div class="dot ${t.ok === true ? 'ok' : t.ok === false ? 'no' : k === i ? 'now' : ''}"></div>`).join('');
+}
+
+function drawPen(popLast) {
+  const won = tasks.filter(t => t.ok).length;
+  $('penTitle').textContent = `Twoje naklejki: ${won}`;
+  $('slots').innerHTML = Array.from({ length: N }, (_, k) =>
+    k < won ? `<div class="slot has${popLast && k === won - 1 ? ' pop' : ''}">${sticker()}</div>` : `<div class="slot"></div>`).join('');
+}
+
+function check() {
+  const raw = $('answer').value.trim().replace(/\s/g, '');
+  if (!/^\d+$/.test(raw)) {
+    $('err').textContent = raw === '' ? 'Najpierw wpisz odpowiedź.' : 'Wpisz samą liczbę, np. 42.';
+    $('err').hidden = false; $('answer').focus(); return;
+  }
+  const t = tasks[i];
+  t.given = parseInt(raw, 10);
+  t.ok = t.given === t.answer;
+  checked = true;
+  $('err').hidden = true; $('answer').readOnly = true;
+  $('answer').className = t.ok ? 'ok' : 'no';
+  const fb = $('feedback');
+  fb.className = 'feedback ' + (t.ok ? 'ok' : 'no');
+  if (t.ok) fb.innerHTML = `<div class="reward">${sticker()}<span>Dobrze! Dostajesz ${THEMES[theme].acc}!</span></div>`;
+  else fb.textContent = `Niestety nie. Poprawny wynik to ${t.answer}.`;
+  fb.hidden = false;
+  $('btn').textContent = i < N - 1 ? 'Dalej →' : 'Zobacz wynik';
+  drawProgress();
+  if (t.ok) drawPen(true);
+  $('btn').focus();
+}
+
+function next() { if (i < N - 1) { i++; show(); } else report(); }
+
+function report() {
+  const good = tasks.filter(t => t.ok).length, T = THEMES[theme], L = LEVELS[level];
+  $('quiz').hidden = true; $('report').hidden = false;
+  $('score').innerHTML = `${good}<small> / ${N}</small>`;
+  const msg = good === 10 ? 'Perfekcyjnie! Wszystko dobrze!'
+    : good >= 8 ? 'Świetna robota!'
+    : good >= 6 ? 'Dobrze! Jeszcze trochę ćwiczeń.'
+    : good >= 4 ? 'Nieźle, spróbuj jeszcze raz.'
+    : 'Poćwicz jeszcze trochę i spróbuj ponownie.';
+  $('msg').textContent = `${msg} Poprawnych odpowiedzi: ${good}, błędnych: ${N - good}.`;
+  const tr = $('trophy');
+  tr.hidden = good !== N;
+  if (player) player.stop();
+  $('video').innerHTML = '';
+  if (good === N) {
+    saveWin(theme, level);
+    tr.style.setProperty('--glow', L.cup.glow);
+    tr.innerHTML = `${trophySvg(theme, level)}<h3>${L.cup.name} puchar ${T.title}!</h3><p>Poziom ${L.name.toLowerCase()}, wszystkie 10 zadań bez błędu.</p>`;
+    mountPlayer($('video'), theme);
+  } else tr.innerHTML = '';
+  $('kennelTitle').textContent = `Zdobyte naklejki: ${good}`;
+  $('kennel').innerHTML = good ? Array.from({ length: good }, () => sticker()).join('')
+    : '<span class="none">Tym razem bez naklejek. Spróbuj jeszcze raz!</span>';
+  $('list').innerHTML = tasks.map(t => `
+    <li class="${t.ok ? 'ok' : 'no'}">
+      <span class="mark">${t.ok ? '✓' : '✗'}</span>
+      <span class="eq">${t.label} = ${t.answer}</span>
+      <span class="yours">${t.ok ? '' : 'Twoja: ' + t.given}</span>
+    </li>`).join('');
+  $('again').focus();
+}
+
+$('themes').addEventListener('click', e => { const b = e.target.closest('.theme'); if (b) pickTheme(b.dataset.th); });
+$('levels').addEventListener('click', e => { const b = e.target.closest('.level'); if (b) start(b.dataset.lv); });
+$('form').addEventListener('submit', e => { e.preventDefault(); checked ? next() : check(); });
+$('again').addEventListener('click', () => start(level));
+$('change').addEventListener('click', showStart);
+const savedTheme = read('theme'); if (savedTheme && THEMES[savedTheme]) theme = savedTheme;
+showStart();
+</script>
+
+</body>
+</html>
